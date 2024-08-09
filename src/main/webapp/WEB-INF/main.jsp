@@ -27,16 +27,26 @@
 
   <nav aria-label="Page navigation">
     <ul class="pagination">
-      <c:if test="${page > 1}">
+      <%-- Prev 버튼 구현: 이전 페이지의 ID가 없으면 첫 페이지로 이동 --%>
+      <c:if test="${previousLastItemId != null}">
         <li>
-          <a href="?page=${page - 1}&size=${size}" aria-label="Previous">
+          <a href="?lastItemId=${previousLastItemId}&size=${size}" aria-label="Previous">
             <span aria-hidden="true">Prev</span>
           </a>
         </li>
       </c:if>
-      <c:if test="${page < totalPage}">
+      <c:if test="${previousLastItemId == null}">
         <li>
-          <a href="?page=${page + 1}&size=${size}" aria-label="Next">
+          <a href="?lastItemId=0&size=${size}" aria-label="Previous">
+            <span aria-hidden="true">Prev</span>
+          </a>
+        </li>
+      </c:if>
+
+      <%-- Next 버튼 구현 --%>
+      <c:if test="${hasMoreItems}">
+        <li>
+          <a href="?lastItemId=${lastItemId}&size=${size}" aria-label="Next">
             <span aria-hidden="true">Next</span>
           </a>
         </li>

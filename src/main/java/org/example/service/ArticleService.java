@@ -24,9 +24,9 @@ public class ArticleService {
 
     }
 
-    public List<Article> findAll(int page, int pageSize) {
+    public List<Article> findAll(long lastItemId, int pageSize) {
         // 게시글 목록 조회
-        return articleRepository.findAll(page, pageSize);
+        return articleRepository.findAll(lastItemId, pageSize);
     }
 
     public Article findById(int i) {

@@ -11,6 +11,8 @@ import jakarta.servlet.annotation.WebInitParam;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
+import org.example.entity.Article;
 import org.example.service.ArticleService;
 import org.example.util.LoggerUtil;
 import org.slf4j.Logger;
@@ -43,12 +45,31 @@ public class StaticResourceFilter implements Filter {
         }
         else if (req.getRequestURI().equals("/")) {
             ArticleService articleService = new ArticleService();
-            int page = req.getParameter("page") == null ? 1 : Integer.parseInt(req.getParameter("page"));
+
+// lastItemId가 전달되지 않았으면(null이면) 처음부터 시작하는 것으로 처리
+            String lastItemIdParam = req.getParameter("lastItemId");
+            Long lastItemId = (lastItemIdParam == null || lastItemIdParam.isEmpty()) ? 0L : Long.parseLong(lastItemIdParam);
+
             int pageSize = req.getParameter("pageSize") == null ? 15 : Integer.parseInt(req.getParameter("pageSize"));
-            req.setAttribute("articles", articleService.findAll(page, pageSize));
-            req.setAttribute("page", page);
+
+// lastItemId와 pageSize를 사용하여 현재 페이지의 articles를 가져옴
+            List<Article> articles = articleService.findAll(lastItemId, pageSize);
+            req.setAttribute("articles", articles);
             req.setAttribute("size", pageSize);
-            req.setAttribute("totalPage", articleService.getTotalPage(pageSize));
+
+// 현재 페이지의 첫 번째 article_id를 JSP로 전달 (prev 버튼을 위해 사용)
+            if (!articles.isEmpty()) {
+                req.setAttribute("firstItemIdOfCurrentPage", articles.get(0).getArticleId());
+            }
+
+// 다음 페이지로 넘어갈 때 사용할 lastItemId를 결정
+            if (!articles.isEmpty()) {
+                req.setAttribute("lastItemId", articles.get(articles.size() - 1).getArticleId());
+            } else {
+                req.setAttribute("lastItemId", null); // 더 이상 아이템이 없을 때
+            }
+// 페이지가 가득 찼다면 더 많은 아이템이 있음
+            req.setAttribute("hasMoreItems", articles.size() == pageSize);
             req.getRequestDispatcher("/WEB-INF/main.jsp").forward(req, res);
         } else {
             chain.doFilter(request, response);

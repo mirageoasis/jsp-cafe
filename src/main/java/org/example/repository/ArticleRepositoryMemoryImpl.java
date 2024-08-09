@@ -35,7 +35,7 @@ public class ArticleRepositoryMemoryImpl implements ArticleRepository {
     }
 
     @Override
-    public List<Article> findAll(int page, int pageSize) {
+    public List<Article> findAll(long page, int pageSize) {
         return new ArrayList<>(articles.values());
     }
 

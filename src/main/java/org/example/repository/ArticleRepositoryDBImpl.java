@@ -46,16 +46,30 @@ public class ArticleRepositoryDBImpl implements ArticleRepository {
     }
 
     @Override
-    public List<Article> findAll(int page, int pageSize) {
+    public List<Article> findAll(long lastItemId, int pageSize) {
         List<Article> articles = new ArrayList<>();
-        String sql = "SELECT * FROM articles WHERE deleted = FALSE ORDER BY article_id DESC LIMIT ? OFFSET ?";
+
+        // lastItemId에 따라 SQL 쿼리를 다르게 작성
+        String sql;
+        if (lastItemId == 0) {
+            // 첫 페이지 로드: OFFSET 없이 최신 글부터 가져오기
+            sql = "SELECT * FROM articles WHERE deleted = FALSE ORDER BY article_id DESC LIMIT ?";
+        } else {
+            // 특정 lastItemId 이후의 레코드를 가져오기
+            sql = "SELECT * FROM articles WHERE deleted = FALSE AND article_id < ? ORDER BY article_id DESC LIMIT ?";
+        }
 
         try (Connection conn = DatabaseManager.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // LIMIT과 OFFSET 파라미터 설정
-            pstmt.setInt(1, pageSize);
-            pstmt.setInt(2, (page - 1) * pageSize);
+            if (lastItemId == 0) {
+                // 첫 페이지일 경우, LIMIT만 설정
+                pstmt.setInt(1, pageSize);
+            } else {
+                // lastItemId가 있는 경우, article_id < lastItemId 조건과 LIMIT 설정
+                pstmt.setLong(1, lastItemId);
+                pstmt.setInt(2, pageSize);
+            }
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
